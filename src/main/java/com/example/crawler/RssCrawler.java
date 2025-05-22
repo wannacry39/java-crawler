@@ -23,13 +23,18 @@ public class RssCrawler {
         Elements items = doc.select("item");
         for (Element item : items) {
             Article article = new Article();
-            article.title = item.selectFirst("title").text();
-            article.link = item.selectFirst("link").text();
-            article.pubDate = item.selectFirst("pubDate") != null ? item.selectFirst("pubDate").text() : "";
-            article.author = item.selectFirst("author") != null ? item.selectFirst("author").text() : "";
-            article.description = item.selectFirst("description") != null ? item.selectFirst("description").text() : "";
+            article.title = getTextOrEmpty(item, "title");
+            article.link = getTextOrEmpty(item, "link");
+            article.pubDate = getTextOrEmpty(item, "pubDate");
+            article.author = getTextOrEmpty(item, "author");
+            article.description = getTextOrEmpty(item, "description");
             articles.add(article);
         }
         return articles;
+    }
+
+    private String getTextOrEmpty(Element parent, String tag) {
+        Element el = parent.selectFirst(tag);
+        return el != null ? el.text() : "";
     }
 }

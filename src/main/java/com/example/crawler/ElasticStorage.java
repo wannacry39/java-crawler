@@ -39,7 +39,7 @@ public class ElasticStorage {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             String input = title + pubDate;
-            byte[] hash = digest.digest(input.getBytes());
+            byte[] hash = digest.digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             return Base64.getUrlEncoder().encodeToString(hash);
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);

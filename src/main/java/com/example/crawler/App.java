@@ -3,13 +3,13 @@ package com.example.crawler;
 public class App {
     public static void main(String[] args) {
         System.out.println("News Crawler started!");
-        String rssUrl = "https://habr.com/ru/rss/articles/";
-        String rabbitHost = "rabbitmq";
-        String taskQueue = "task_queue";
-        String resultQueue = "result_queue";
-        String elasticHost = "elasticsearch";
-        int elasticPort = 9200;
-        String elasticIndex = "news";
+        final String rssUrl = "https://habr.com/ru/rss/articles/";
+        final String rabbitHost = "rabbitmq";
+        final String taskQueue = "task_queue";
+        final String resultQueue = "result_queue";
+        final String elasticHost = "elasticsearch";
+        final int elasticPort = 9200;
+        final String elasticIndex = "news";
 
         // 1. Парсим RSS и отправляем задачи
         RssCrawler crawler = new RssCrawler();
@@ -35,18 +35,28 @@ public class App {
                     worker.start();
                 } catch (Exception e) {
                     System.err.println("Ошибка воркера: " + e.getMessage());
+                    e.printStackTrace();
                 }
-            }).start();
+            }, "Worker-Thread").start();
         } catch (Exception e) {
             System.err.println("Ошибка при запуске воркера: " + e.getMessage());
+            e.printStackTrace();
         }
 
         // 3. Запускаем ResultConsumer для сохранения в ElasticSearch
         try {
             ResultConsumer consumer = new ResultConsumer(rabbitHost, resultQueue);
-            consumer.consume();
+            new Thread(() -> {
+                try {
+                    consumer.consume();
+                } catch (Exception e) {
+                    System.err.println("Ошибка ResultConsumer: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }, "ResultConsumer-Thread").start();
         } catch (Exception e) {
             System.err.println("Ошибка при запуске ResultConsumer: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

@@ -8,9 +8,9 @@ import java.util.Map;
 public class ResultConsumer {
     private final String queueName;
     private final ConnectionFactory factory;
-    private final String elasticHost = "elasticsearch";
-    private final int elasticPort = 9200;
-    private final String elasticIndex = "news";
+    private static final String ELASTIC_HOST = "elasticsearch";
+    private static final int ELASTIC_PORT = 9200;
+    private static final String ELASTIC_INDEX = "news";
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ResultConsumer(String host, String queueName) {
@@ -20,23 +20,24 @@ public class ResultConsumer {
     }
 
     public void consume() throws Exception {
-        Connection connection = factory.newConnection();
-        Channel channel = connection.createChannel();
-        channel.queueDeclare(queueName, true, false, false, null);
-        System.out.println("[ResultConsumer] Waiting for messages...");
-        ElasticStorage storage = new ElasticStorage(elasticHost, elasticPort, elasticIndex);
-        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-            String message = new String(delivery.getBody(), "UTF-8");
-            System.out.println("[ResultConsumer] Received: " + message);
-            try {
-                Map<String, Object> article = objectMapper.readValue(message, Map.class);
-                String id = storage.computeId((String) article.get("title"), (String) article.get("pubDate"));
-                storage.saveArticle(article, id);
-            } catch (Exception e) {
-                System.err.println("[ResultConsumer] Error saving to Elastic: " + e.getMessage());
-            }
-            channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-        };
-        channel.basicConsume(queueName, false, deliverCallback, consumerTag -> {});
+        try (Connection connection = factory.newConnection();
+             Channel channel = connection.createChannel()) {
+            channel.queueDeclare(queueName, true, false, false, null);
+            System.out.println("[ResultConsumer] Waiting for messages...");
+            ElasticStorage storage = new ElasticStorage(ELASTIC_HOST, ELASTIC_PORT, ELASTIC_INDEX);
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String message = new String(delivery.getBody(), java.nio.charset.StandardCharsets.UTF_8);
+                System.out.println("[ResultConsumer] Received: " + message);
+                try {
+                    Map<String, Object> article = objectMapper.readValue(message, Map.class);
+                    String id = storage.computeId((String) article.get("title"), (String) article.get("pubDate"));
+                    storage.saveArticle(article, id);
+                } catch (Exception e) {
+                    System.err.println("[ResultConsumer] Error saving to Elastic: " + e.getMessage());
+                }
+                channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+            };
+            channel.basicConsume(queueName, false, deliverCallback, consumerTag -> {});
+        }
     }
 }

@@ -1,0 +1,35 @@
+# Java/Maven
+/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+*.swp
+*.swo
+*.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Misc
+*.tmp
+*.bak
+
+# Docker
+*.pid
+
+# VSCode
+.vscode/
+
+# Dependency reduced pom
+/dependency-reduced-pom.xml

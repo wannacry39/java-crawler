@@ -18,7 +18,7 @@ public class TaskProducer {
         try (Connection connection = factory.newConnection();
              Channel channel = connection.createChannel()) {
             channel.queueDeclare(queueName, true, false, false, null);
-            channel.basicPublish("", queueName, null, message.getBytes());
+            channel.basicPublish("", queueName, null, message.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             System.out.println("[TaskProducer] Sent: " + message);
         }
     }
